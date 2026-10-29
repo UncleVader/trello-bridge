@@ -87,6 +87,7 @@ describe('CardsService', () => {
       | 'addCheckItem'
       | 'setCheckItemState'
       | 'listLists'
+      | 'getList'
       | 'createCard'
       | 'renameCard'
       | 'moveCard'
@@ -135,6 +136,7 @@ describe('CardsService', () => {
         .mockResolvedValue({ id: 'cl-new', name: 'Build' }),
       addCheckItem: jest.fn().mockResolvedValue(undefined),
       setCheckItemState: jest.fn().mockResolvedValue(undefined),
+      getList: jest.fn().mockResolvedValue({ id: 'l1', name: 'Backlog' }),
       listLists: jest.fn().mockResolvedValue([
         { id: 'l1', name: 'Backlog' },
         { id: 'l2', name: 'Backend Foundation' },
@@ -199,6 +201,8 @@ describe('CardsService', () => {
   it('getCard returns description, checklists and comments', async () => {
     const view = await service.getCard('FB-1', 5, BOARD);
     expect(view.name).toBe('FB-1: Scaffold');
+    expect(view.list).toBe('Backlog');
+    expect(trello.getList).toHaveBeenCalledWith('l1');
     expect(view.description).toBe('existing');
     expect(view.checklists[0].items).toEqual([
       { name: 'step one', state: 'complete' },
@@ -206,6 +210,26 @@ describe('CardsService', () => {
     ]);
     expect(view.comments).toHaveLength(1);
     expect(view.attachments.map((a) => a.name)).toEqual(['isu-response.md']);
+  });
+
+  it('listBoardCards returns every card with its list, in list order', async () => {
+    const rows = await service.listBoardCards(BOARD);
+    expect(rows).toEqual([
+      { name: 'FB-1: Scaffold', shortUrl: 'u1', list: 'Backlog' },
+      { name: 'FB-2: Auth', shortUrl: 'u2', list: 'Backlog' },
+      { name: 'FB-2.1: Auth extras', shortUrl: 'u2b', list: 'Backend Foundation' },
+    ]);
+  });
+
+  it('listBoardCards narrows to one list by name', async () => {
+    const rows = await service.listBoardCards(BOARD, 'backend');
+    expect(rows.map((r) => r.name)).toEqual(['FB-2.1: Auth extras']);
+  });
+
+  it('listBoardCards rejects an unknown list with 404', async () => {
+    await expect(service.listBoardCards(BOARD, 'Nope')).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
   });
 
   const upload = (name: string) => ({

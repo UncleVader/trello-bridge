@@ -16,7 +16,7 @@ mandatory per-request `X-Trello-Board` header so one running instance can
 serve several projects at once (0.8.0), move a card between lists (0.9.0),
 move cards between boards and recognize Unicode epic-scoped ticket ids such
 as `E2-1C-13` in the duplicate guard (0.10.0), resolve a card by shortLink
-or card URL without a board header (0.10.1), full checklist CRUD — append, edit and delete items, rename a checklist — and file attachments (0.12.0).
+or card URL without a board header (0.10.1), full checklist CRUD — append, edit and delete items, rename a checklist — and file attachments (0.12.0), list board cards with their list (0.13.0).
 
 ### `X-Trello-Board` — required for name lookups
 
@@ -212,6 +212,13 @@ Renames the card. Rejects a blank/whitespace-only name with `400`. The DTO
 is whitelisted to `name` only — it cannot touch the description or any
 other field. → `{ "card", "previousName", "name" }` (`card` is the
 post-rename name, for chaining; `previousName`/`name` give the diff).
+
+### `GET /cards`
+
+Requires `X-Trello-Board`. Every open card on the board with its list, in
+board list order: `[{ "name", "shortUrl", "list" }]`. `?list=Blocked`
+narrows to one list (prefix-then-substring, `404`/`409`). `GET
+/cards/:query` also returns `list` (0.13.0+).
 
 ### `PATCH /cards/:query/list`
 

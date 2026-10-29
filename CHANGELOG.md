@@ -1,5 +1,14 @@
 # Changelog — trello-bridge
 
+## 0.13.0 — 2026-10-29
+
+- `GET /cards` (with `X-Trello-Board`) lists every open card on the board
+  with the list it sits in, in board list order:
+  `[{ "name", "shortUrl", "list" }]`. `?list=` narrows to one list (matched
+  by name like every `:query`, 404 / 409). Replaces the "409 on a prefix"
+  trick for seeing what is on a board.
+- `GET /cards/:query` now returns `list` — the name of the card's list.
+
 ## 0.12.0 — 2026-10-29
 
 - Items can be appended to an existing checklist:
