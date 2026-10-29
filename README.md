@@ -54,8 +54,9 @@ curl -s http://127.0.0.1:4646/cards/TICKET-2 \
 
 ## Run
 
-Get an API key and token at https://trello.com/power-ups/admin (Power-Up →
-API key → generate a token), then:
+You need a Trello API key and a user token (see
+[Getting a Trello API key and token](#getting-a-trello-api-key-and-token)
+below), then:
 
 ```bash
 cp .env.example .env   # fill in TRELLO_KEY and TRELLO_TOKEN
@@ -68,6 +69,40 @@ Server starts on `http://127.0.0.1:4646` (override with `PORT`). Credentials
 (`TRELLO_KEY`/`TRELLO_TOKEN`) are picked up from the nearest `.env` in this
 directory or any parent directory; real env vars take priority. There is no board env var — name lookups supply their board via
 `X-Trello-Board`; a shortLink or card URL does not (see above).
+
+### Getting a Trello API key and token
+
+The bridge authenticates with the classic API key + user token pair. It
+does not use OAuth 2.0, so the "Build more secure apps with OAuth 2.0"
+banner on the admin page can be ignored.
+
+1. Open https://trello.com/power-ups/admin (same page as
+   https://trello.com/apps/admin). The key belongs to an app ("Power-Up")
+   listed under **Your Apps**.
+2. If the list is empty, click **New** and fill in the form: any name
+   (e.g. `trello-bridge`), the workspace, your email and author name.
+   **Iframe connector URL** can stay empty — the bridge has no UI inside
+   Trello. Click **Create**. If an app is already listed, you can reuse it.
+3. Click the app's tile to open it, then the **Trello Auth** tab (called
+   **API key** on older versions of the page).
+4. Click **Generate a new API Key** (skip if a key is already shown). Copy
+   the **API key** into `TRELLO_KEY`. The **Secret** is not needed.
+5. Click the **Token** link next to the key, check the app name and the
+   permissions on the consent screen, and click **Allow**. Trello shows the
+   token: copy it into `TRELLO_TOKEN`.
+
+   Instead of the link you can open the authorize URL yourself, which lets
+   you choose the lifetime and scope explicitly (`expiration`: `1hour`,
+   `1day`, `30days` or `never`; the bridge needs `read,write`):
+
+   ```
+   https://trello.com/1/authorize?expiration=never&scope=read,write&response_type=token&name=trello-bridge&key=<TRELLO_KEY>
+   ```
+
+The token acts as **your** Trello user: the bridge sees exactly the boards
+you can see and writes on your behalf. Keep it out of git and chat (`.env`
+is git-ignored). To revoke it, open your Trello account settings →
+**Applications** and revoke the app, then generate a new token.
 
 ### Docker
 
