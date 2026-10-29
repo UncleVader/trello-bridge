@@ -1,6 +1,6 @@
 {
   "name": "trello-bridge",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "description": "Localhost-only NestJS bridge to Trello (boards, cards, checklists and cross-board moves). Name lookups identify their board via X-Trello-Board; a shortLink or card URL resolves without it.",
   "private": true,
   "license": "MIT",

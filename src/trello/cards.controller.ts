@@ -15,7 +15,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { CardsService, CardView } from './cards.service';
+import { CardsService, CardSummary, CardView } from './cards.service';
 import { AddCheckItemsDto } from './dto/add-checkitems.dto';
 import { AddAttachmentDto } from './dto/add-attachment.dto';
 import { AddCommentDto } from './dto/add-comment.dto';
@@ -74,6 +74,15 @@ export class CardsController {
       },
       board,
     );
+  }
+
+  /** List the board's cards with their list; `?list=` narrows to one list. */
+  @Get()
+  listCards(
+    @Query('list') list?: string,
+    @Headers('x-trello-board') board?: string,
+  ): Promise<CardSummary[]> {
+    return this.cards.listBoardCards(board, list);
   }
 
   /** Read a card: description, checklists with tick state, latest comments. */

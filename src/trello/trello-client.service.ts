@@ -194,6 +194,13 @@ export class TrelloClientService {
     });
   }
 
+  /** One list's name by id (`GET /1/lists/{id}`). */
+  async getList(listId: string): Promise<TrelloList> {
+    return this.request<TrelloList>('GET', `/lists/${listId}`, {
+      fields: 'name,id',
+    });
+  }
+
   async listLists(boardId: string): Promise<TrelloList[]> {
     return this.request<TrelloList[]>('GET', `/boards/${boardId}/lists`, {
       fields: 'name,id',

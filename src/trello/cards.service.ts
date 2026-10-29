@@ -39,10 +39,19 @@ export const APPEND_SEPARATOR =
  */
 export const TOP_ON_MOVE_INTO_LISTS = ['review', 'done'];
 
+/** One row of `GET /cards`: a card and the list it sits in. */
+export interface CardSummary {
+  name: string;
+  shortUrl: string;
+  list: string;
+}
+
 export interface CardView {
   id: string;
   name: string;
   shortUrl: string;
+  /** Name of the list the card sits in. */
+  list: string;
   description: string;
   checklists: {
     name: string;
@@ -145,6 +154,30 @@ export class CardsService {
     return this.matchOrThrow(cards, ref.name);
   }
 
+  /**
+   * Every open card on the board with its list, in board list order. An
+   * optional list query (prefix-then-substring, 404 / 409) narrows it to
+   * one list.
+   */
+  async listBoardCards(
+    boardOverride?: string,
+    listQuery?: string,
+  ): Promise<CardSummary[]> {
+    const boardId = await this.resolveBoardId(boardOverride);
+    const [cards, lists] = await Promise.all([
+      this.trello.listCards(boardId),
+      this.trello.listLists(boardId),
+    ]);
+    const shown = listQuery?.trim()
+      ? [this.matchOrThrow(lists, listQuery.trim())]
+      : lists;
+    return shown.flatMap((l) =>
+      cards
+        .filter((c) => c.idList === l.id)
+        .map((c) => ({ name: c.name, shortUrl: c.shortUrl, list: l.name })),
+    );
+  }
+
   /** Full card state: description + checklists (tick state) + comments. */
   async getCard(
     query: string,
@@ -152,7 +185,8 @@ export class CardsService {
     boardOverride?: string,
   ): Promise<CardView> {
     const card = await this.resolveCard(query, boardOverride);
-    const [checklists, comments, attachments] = await Promise.all([
+    const [list, checklists, comments, attachments] = await Promise.all([
+      this.trello.getList(card.idList),
       this.trello.getChecklists(card.id),
       commentLimit > 0
         ? this.trello.getComments(card.id, commentLimit)
@@ -163,6 +197,7 @@ export class CardsService {
       id: card.id,
       name: card.name,
       shortUrl: card.shortUrl,
+      list: list.name,
       description: card.desc ?? '',
       checklists: checklists.map((cl: TrelloChecklist) => ({
         name: cl.name,
